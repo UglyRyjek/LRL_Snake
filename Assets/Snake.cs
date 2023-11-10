@@ -16,7 +16,8 @@ public class Snake : MonoBehaviour
 
     [SerializeField, ReadOnly] private SnakeInput _input;
 
-    public SnakePart Head => _snakeParts.First();
+    private SnakePart _head;
+    private Direction _currentDirection = Direction.Up;
 
     // while use of BoardField is not optimal it allows to do the task quickly and is flexible to modify if requirements will change
 
@@ -51,20 +52,30 @@ public class Snake : MonoBehaviour
             _gfx.transform.position = _bp.GetFieldPresenter(_currentField).transform.position;
         }
 
-        public void SpawnIt()
+        public void DestroyIt()
         {
-
+            Destroy(_gfx.gameObject);
         }
     }
 
     [Button]
+    public void Reverse()
+    {
+        Direction reveresedDirection = GetOpositeDirection(_currentDirection);
+        ChangeSnakeHeadDirection(reveresedDirection);
+
+        SnakePart tail = _snakeParts.Last();
+
+        _head.PlaceIt(tail.CurrentField);
+    }
+
     public void AddPart()
     {
         Transform newPart = Instantiate(_bodyPartPrototype, _bodyPartPrototype.transform.parent).transform;
         //Debug.Log("Move it where it should be");
         newPart.gameObject.SetActive(true);
 
-        SnakePart sp = new SnakePart(Head.CurrentField, newPart, _boardPresenter);
+        SnakePart sp = new SnakePart(_head.CurrentField, newPart, _boardPresenter);
         _snakeParts.Add(sp);
     }
 
@@ -74,17 +85,19 @@ public class Snake : MonoBehaviour
 
         SnakePart sp = new SnakePart(initalField, _headPartReference, _boardPresenter);
         _snakeParts.Add(sp);
+
+        _head = _snakeParts.First();
     }
 
-    [Button]
     public void RemovePart()
     {
-        //if (_snakeParts.Count > 1)
-        //{
-        //    Transform lastPart = _snakeParts[_snakeParts.Count - 1];
-        //    _snakeParts.Remove(lastPart);
-        //    Destroy(lastPart.gameObject);
-        //}
+        // asume that head cannot be eaten down
+        if (_snakeParts.Count > 1)
+        {
+            SnakePart lastPart = _snakeParts.Last();
+            _snakeParts.Remove(lastPart);
+            lastPart.DestroyIt();
+        }
     }
 
     public void Initialize(BoardPresenter bp, BoardModel bm, SnakeInput input)
@@ -97,18 +110,36 @@ public class Snake : MonoBehaviour
         AddPart();
     }
 
-    private BoardField _headDeltaPlace;
-
-    private void SimulateInput(Direction d)
+    public void Tick()
     {
-        if (_boardPresenter != null)
+        CheckIfSnakeShouldChangeDirection();
+
+        MoveSnake(_currentDirection);
+
+        CheckIfCollisionHappened();
+
+        void CheckIfSnakeShouldChangeDirection()
         {
-            _headDeltaPlace = Head.CurrentField;
+            Direction d = _input.GetInputDirection();
+            if (d != Direction.None)
+            {
+                //asume that we ignore pressing oposite direcion
+                bool opositePressed = AreOpositeDirection(_currentDirection, d);
+                if (opositePressed == false)
+                {
+                    ChangeSnakeHeadDirection(d);
+                }
+            }
+        }
 
-            Head.PlaceIt(_boardPresenter.GetNext(d, Head.CurrentField));
+        void MoveSnake(Direction d)
+        {
+            BoardField previousHeadField = _head.CurrentField;
 
-            BoardField previousHeadField = _headDeltaPlace;
+            // move head
+            _head.PlaceIt(_boardPresenter.GetNext(d, _head.CurrentField));
 
+            // follow with the body
             for (int i = 1; i < _snakeParts.Count; i++)
             {
                 BoardField temp = _snakeParts[i].CurrentField;
@@ -116,49 +147,31 @@ public class Snake : MonoBehaviour
                 previousHeadField = temp;
             }
         }
+
+        void CheckIfCollisionHappened()
+        {
+            if (ColisionWithSelfOccured())
+            {
+                Debug.LogError("Bada boom");
+            }
+
+        }
     }
 
-    private Direction _currentDirection = Direction.Up;
-
-    public void Tick()
+    private void ChangeSnakeHeadDirection(Direction newDirection)
     {
-        Direction d = _input.GetInputDirection();
-        if (d != Direction.None)
-        {
-            //asume that we ignore pressing oposite direcion
-            bool opositePressed = AreOpositeDirection(_currentDirection, d);
-            if (opositePressed)
-            {
-                SimulateInput(_currentDirection);
-            }
-            else
-            {
-                _currentDirection = d;
-                SimulateInput(d);
-            }
-        }
-        else
-        {
-            SimulateInput(_currentDirection);
-        }
-
-        if(ColisionWithSelfOccured())
-        {
-            Debug.LogError("Bada boom");
-        }
-
+        _currentDirection = newDirection;
     }
 
     public bool ColisionWithSelfOccured()
     {
-        BoardField headField = Head.CurrentField;
+        BoardField headField = _head.CurrentField;
 
         // Check if the head's current field is the same as any other part's field
         for (int i = 1; i < _snakeParts.Count; i++)
         {
             if (_snakeParts[i].CurrentField == headField)
             {
-                Debug.LogError($"COLLSION!!! Part{i.ToString()}  {_snakeParts[i].CurrentField.ToString()} and {_snakeParts[i].CurrentField.ToString()}");
                 return true;
             }
         }
@@ -174,6 +187,19 @@ public class Snake : MonoBehaviour
         if (a == Direction.Left && b == Direction.Right) return true;
 
         return false;
+    }
+
+    private static Direction GetOpositeDirection(Direction a)
+    {
+        switch (a)
+        {
+            case Direction.None: return Direction.None;
+            case Direction.Up: return Direction.Down;
+            case Direction.Down: return Direction.Up;
+            case Direction.Left: return Direction.Right;
+            case Direction.Right: return Direction.Left;
+            default: return Direction.None;
+        }
     }
 }
 
