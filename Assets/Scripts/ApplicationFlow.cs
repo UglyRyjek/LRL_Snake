@@ -10,13 +10,21 @@ public class ApplicationFlow : MonoBehaviour
     [SerializeField] private BoardParameters _boardParameters;
     [SerializeField] private Snake _snake;
     [SerializeField] private SnakeInput _snakeInput;
+    [SerializeField] private GameOverUI _gameOverUI;
 
     [SerializeField]
     private float _tickTime;
 
     private float timer;
+    private bool _gameOverFlag;
+
 
     private void Start()
+    {
+        InitializeApplication();
+    }
+
+    private void InitializeApplication()
     {
         _board = new BoardService(_boardParameters);
         _boardPresenter.InitializeBoard(_board);
@@ -26,6 +34,8 @@ public class ApplicationFlow : MonoBehaviour
         InvokeTick();
     }
 
+    
+
     private void Update()
     {
         WaitForTimerToTick();
@@ -33,6 +43,11 @@ public class ApplicationFlow : MonoBehaviour
 
     private void WaitForTimerToTick()
     {
+        if(_gameOverFlag == true)
+        {
+            return;
+        }
+
         timer += Time.deltaTime;
 
         if(timer >= _tickTime)
@@ -50,5 +65,14 @@ public class ApplicationFlow : MonoBehaviour
         }
 
         _snake.Tick();
+
+        bool gameOver = _snake.CheckIfCollisionHappened();
+
+        if(gameOver)
+        {
+            Debug.Log("Game Over");
+            _gameOverFlag = true;
+            _gameOverUI.LoadGameOver();
+        }
     }
 }

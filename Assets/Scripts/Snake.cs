@@ -22,7 +22,7 @@ public class Snake : MonoBehaviour
     // while use of BoardField is not optimal it allows to do the task quickly and is flexible to modify if requirements will change
 
     [System.Serializable]
-    public class SnakePart
+    private class SnakePart
     {
         public SnakePart(BoardField f, Transform gfx, BoardPresenter b)
         {
@@ -116,8 +116,6 @@ public class Snake : MonoBehaviour
 
         MoveSnake(_currentDirection);
 
-        CheckIfCollisionHappened();
-
         void CheckIfSnakeShouldChangeDirection()
         {
             Direction d = _input.GetInputDirection();
@@ -147,15 +145,17 @@ public class Snake : MonoBehaviour
                 previousHeadField = temp;
             }
         }
+    }
 
-        void CheckIfCollisionHappened()
+    public bool CheckIfCollisionHappened()
+    {
+        if (ColisionWithSelfOccured())
         {
-            if (ColisionWithSelfOccured())
-            {
-                Debug.LogError("Bada boom");
-            }
-
+            return true;
+            Debug.LogError("Bada boom");
         }
+
+        return false;
     }
 
     private void ChangeSnakeHeadDirection(Direction newDirection)
@@ -201,10 +201,4 @@ public class Snake : MonoBehaviour
             default: return Direction.None;
         }
     }
-}
-
-
-public abstract class SnakeInput : MonoBehaviour
-{
-    public abstract Direction GetInputDirection();
 }

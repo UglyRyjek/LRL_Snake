@@ -12,9 +12,3 @@ public class FieldPresenter : BaseFieldPresenter
         _text.text = $"{bf.X}x : {bf.Y}y";
     }
 }
-
-
-public abstract class BaseFieldPresenter : MonoBehaviour
-{
-    public abstract void Initialize(BoardField bf);
-}
