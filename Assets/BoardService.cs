@@ -87,10 +87,12 @@ public class BoardModel
 [System.Serializable]
 public enum Direction
 {
+    None,
     Up,
     Down,
     Left,
     Right
+
 }
 
 [System.Serializable]
@@ -100,6 +102,11 @@ public class BoardField
     {
         X = xPosition;
         Y = yPosition;
+    }
+
+    public new string ToString()
+    {
+        return $"{X} : {Y}";
     }
 
     public int X;

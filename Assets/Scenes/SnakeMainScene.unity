@@ -205,6 +205,53 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 23090591}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &150948369
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 150948371}
+  - component: {fileID: 150948370}
+  m_Layer: 0
+  m_Name: KeyboardInput
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &150948370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 150948369}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7bb32c9b891814facc5023c4862afa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _upButton: 119
+  _downButton: 115
+  _rightButton: 100
+  _leftButton: 97
+--- !u!4 &150948371
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 150948369}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.5715506, y: 3.1216073, z: -5.6993575}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1072829467}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &214695090
 GameObject:
   m_ObjectHideFlags: 0
@@ -792,6 +839,8 @@ MonoBehaviour:
     _height: 10
     _width: 18
   _snake: {fileID: 1073122625}
+  _snakeInput: {fileID: 150948370}
+  _tickTime: 0.11
 --- !u!4 &1072829467
 Transform:
   m_ObjectHideFlags: 0
@@ -802,7 +851,8 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 150948371}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -851,9 +901,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f5373c83b0c88e479a169322420c101, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _snakeHeadPresenter: {fileID: 719044758}
+  _headPartReference: {fileID: 719044758}
+  _bodyPartPrototype: {fileID: 509878930}
   _snakeParts: []
-  snakePartPrefab: {fileID: 509878929}
+  _input: {fileID: 0}
 --- !u!1 &1163830156
 GameObject:
   m_ObjectHideFlags: 0
@@ -1431,7 +1482,7 @@ MeshRenderer:
   m_GameObject: {fileID: 2116566431}
   m_Enabled: 1
   m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
