@@ -7,8 +7,25 @@ using System.Linq;
 public class Snake : MonoBehaviour
 {
     [SerializeField]
-    private float _snakeSpeed = 0.11f;
+    private float _baseSnakeSpeed = 0.11f;
+    [SerializeField]
+    private float _speedMultiplayer = 1f;
 
+    private float _snakeSpeed => _baseSnakeSpeed * _speedMultiplayer;
+    private float _speedUpTimer;
+
+    public void ChangeSpeedModifier(float newModifier, float buffTime)
+    {
+        _speedMultiplayer = newModifier;
+
+        CancelInvoke();
+        Invoke(nameof(ResetSpeed), buffTime);
+    }
+
+    private void ResetSpeed()
+    {
+        _speedMultiplayer = 1f;
+    }
 
     //private BoardField _currentHeadPart;
     private BoardPresenter _boardPresenter;
@@ -18,7 +35,7 @@ public class Snake : MonoBehaviour
     [SerializeField] private Transform _bodyPartPrototype;
     [SerializeField] private List<SnakePart> _snakeParts = new List<SnakePart>();
 
-    public IReadOnlyList<BoardField>SnakeParts => _snakeParts.Select(x => x.CurrentField).ToList();
+    public IReadOnlyList<BoardField> SnakeParts => _snakeParts.Select(x => x.CurrentField).ToList();
 
     [SerializeField, ReadOnly] private SnakeInput _input;
 
@@ -64,7 +81,6 @@ public class Snake : MonoBehaviour
         }
     }
 
-    [Button]
     public void Reverse()
     {
         Direction reveresedDirection = GetOpositeDirection(_currentDirection);
@@ -73,6 +89,25 @@ public class Snake : MonoBehaviour
         SnakePart tail = _snakeParts.Last();
 
         _head.PlaceIt(tail.CurrentField);
+    }
+
+    public void ChangeSnakeSize(int changeBy)
+    {
+        if(changeBy >= 1)
+        {
+            for (int i = 0; i < changeBy; i++)
+            {
+                AddPart();
+            }
+        }
+        else
+        if(changeBy < 0)
+        {
+            for (int i = 0; i < Mathf.Abs(changeBy); i++)
+            {
+                RemovePart();
+            }
+        }
     }
 
     public void AddPart()

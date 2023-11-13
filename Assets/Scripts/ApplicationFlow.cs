@@ -47,7 +47,6 @@ public class ApplicationFlow : MonoBehaviour
         InvokeSnakeTick();
 
 
-
         if (Input.GetKeyDown(KeyCode.Z))
         {
             BoardField bf = GetFreeFieldOnBoard(_snake.SnakeParts);
