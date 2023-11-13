@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
 
 public class SimpleScoringUI : MonoBehaviour
 {
@@ -12,7 +9,7 @@ public class SimpleScoringUI : MonoBehaviour
 
     private void Update()
     {
-        int score = GameSessionService.I.GetSessionData.EatenEdibles;
+        int score = GameSessionService.I.SessionData.EatenEdibles;
 
         if(_bufferScore != score)
         {

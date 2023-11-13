@@ -6,16 +6,19 @@ using System.Linq;
 
 public class ApplicationFlow : MonoBehaviour
 {
+
+    [FoldoutGroup("Dependencie")]
     [SerializeField] private BoardService _board;
+    [FoldoutGroup("Dependencie")]
     [SerializeField] private BoardPresenter _boardPresenter;
+    [FoldoutGroup("Dependencie")]
     [SerializeField] private BoardParameters _boardParameters;
+    [FoldoutGroup("Dependencie")]
     [SerializeField] private Snake _snake;
+    [FoldoutGroup("Dependencie")]
     [SerializeField] private SnakeInput _snakeInput;
-    [SerializeField] private GameOverUI _gameOverUI;
-
+    [FoldoutGroup("Dependencie")]
     [SerializeField] private EdibleSpawner _edibleSpawner;
-
-    private bool _gameOverFlag;
 
     private void Start()
     {
@@ -24,112 +27,65 @@ public class ApplicationFlow : MonoBehaviour
 
     private void InitializeApplication()
     {
-        GameSessionService.I.StartSession();
+        OnFlowStart();
 
         _board = new BoardService(_boardParameters);
         _boardPresenter.InitializeBoard(_board);
-
+        _edibleSpawner.Initialized(_board, _boardPresenter);
         _snake.Initialize(_boardPresenter, _board.BoardModel, _snakeInput);
-
-        SnakeMovement();
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            _snake.AddPart();
-        }
+        ApplicationFlowSequence();
+    }
 
-        if (_gameOverFlag == true)
+    private void ApplicationFlowSequence()
+    {
+        if (GameSessionService.I.SessionData.State == SessionData.SessionState.GameOver)
         {
             return;
         }
 
-        SnakeMovement();
-
-
-        if (Input.GetKeyDown(KeyCode.Z))
-        {
-            BoardField bf = GetFreeFieldOnBoard(_snake.SnakeParts);
-            _edibleSpawner.SpawnEdible(bf, _boardPresenter);
-        }
-    }
-
-    private void SnakeMovement()
-    {
         bool ticked = _snake.Tick();
-
         if(ticked == true)
         {
             bool gameOver = _snake.CheckIfCollisionHappened();
             if (gameOver)
             {
-                Debug.Log("Game Over");
-                _gameOverFlag = true;
-                _gameOverUI.LoadGameOver();
-            }
-
-            var v = _edibleSpawner.BEPU(_snake.SnakeParts.First());
-            if (v != null)
-            {
-                Debug.Log("EAT EDIBLE");
-                v.EatenEffect(_snake);
-                _edibleSpawner.EatEdible(v);
-
-                OnEdibleEaten();
+                OnGameOver();
             }
         }
+
+        _edibleSpawner.SolveEdibleEating(_snake, OnEdibleEaten);
+        _edibleSpawner.SolveEdibleSpawning(_snake);
     }
 
-    private void OnEdibleEaten()
+    private void OnFlowStart()
+    {
+        GameSessionService.I.StartSession();
+    }
+
+    private void OnEdibleEaten(BaseEdiblePowerUp powerUp)
     {
         GameSessionService.I.AddEdible();
     }
 
-    // assume there is always one
-    private BoardField GetFreeFieldOnBoard(IReadOnlyList<BoardField> snake)
+    private void OnGameOver()
     {
-        List<BoardField> freeFields = new List<BoardField>();
-
-        // all fields on board
-        _board.BoardModel.Fields.ForEach(x => freeFields.Add(x));
-
-        // minus ones occupied by snake
-        for (int i = 0; i < snake.Count; i++)
-        {
-            freeFields.Remove(snake[i]);
-        }
-
-        //TODO
-        // minus already occupied by edibles
-
-        //TODO
-        // also exclude these that are too close too head
-        BoardField snakeHead = snake.First();
-
-
-        BoardField randomField = freeFields[Random.Range(0, freeFields.Count - 1)];
-        return randomField;
+        GameSessionService.I.EndSession();
     }
-}
-
-
-[System.Serializable]
-public class AppProfile
-{
-    public int minimalSnakeSize = 1;
-    
 }
 
 public class GameSessionService
 {
     private static GameSessionService i;
+
     public static GameSessionService I
     {
         get
         {
-            if(i == null)
+            if (i == null)
             {
                 i = new GameSessionService();
             }
@@ -138,17 +94,23 @@ public class GameSessionService
         }
     }
 
+    public SessionData SessionData { get; private set; }
+
     public void StartSession()
     {
-        GetSessionData = new SessionData();
+        SessionData = new SessionData();
+        SessionData.SetSessionState(SessionData.SessionState.Playing);
+    }
+
+    public void EndSession()
+    {
+        SessionData.SetSessionState(SessionData.SessionState.GameOver);
     }
 
     public void AddEdible()
     {
-        GetSessionData.AddEdible();
+        SessionData.AddEdible();
     }
-
-    public SessionData GetSessionData { get; private set; }
 }
 
 [System.Serializable]
@@ -158,6 +120,7 @@ public class SessionData
     {
         eatenEdibles = 0;
         startTime = Time.time;
+        sessionState = SessionState.Playing;
     }
 
     public void AddEdible()
@@ -165,9 +128,23 @@ public class SessionData
         eatenEdibles++;
     }
 
+    public void SetSessionState(SessionState state)
+    {
+        sessionState = state;
+    }
+
+    private SessionState sessionState;
     private float startTime;
     private int eatenEdibles;
 
     public int EatenEdibles => eatenEdibles;
     public float GameTime => Time.time - startTime;
+    public SessionState State => sessionState;
+
+    [System.Serializable]
+    public enum SessionState
+    {
+        Playing = 0,
+        GameOver = 1,
+    }
 }

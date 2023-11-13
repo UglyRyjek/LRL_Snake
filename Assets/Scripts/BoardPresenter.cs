@@ -12,7 +12,6 @@ public class BoardPresenter : MonoBehaviour
 
     private Dictionary<BoardField, BaseFieldPresenter> _keyValuePairs = new Dictionary<BoardField, BaseFieldPresenter>();
 
-
     public void InitializeBoard(BoardService boardService)
     {
         _boardReference = boardService;
@@ -51,26 +50,6 @@ public class BoardPresenter : MonoBehaviour
         {
             Debug.LogError("Should never happened, application flow prevent it");
             return _keyValuePairs.First().Key;
-        }
-    }
-
-    [Button]
-    public void DestroyInEditor()
-    {
-        List<BaseFieldPresenter> boardFields = GetComponentsInChildren<BaseFieldPresenter>().ToList();
-        foreach (var item in boardFields)
-        {
-            if (item != _boardFieldPrototype)
-            {
-                if (Application.isPlaying)
-                {
-                    Destroy(item.gameObject);
-                }
-                else
-                {
-                    DestroyImmediate(item.gameObject);
-                }
-            }
         }
     }
 

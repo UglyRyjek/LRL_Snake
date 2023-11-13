@@ -1,12 +1,11 @@
 ﻿using UnityEngine;
-// could have used new unity input system
+
 public class KeyboardSnakeInput : SnakeInput
 {
     [SerializeField] private KeyCode _upButton;
     [SerializeField] private KeyCode _downButton;
     [SerializeField] private KeyCode _rightButton;
     [SerializeField] private KeyCode _leftButton;
-
 
     // ASUME that we cancel inputs if we have more than 1 pressed
     public override Direction GetInputDirection()

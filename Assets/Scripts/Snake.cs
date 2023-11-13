@@ -1,18 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using Sirenix.OdinInspector;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 public class Snake : MonoBehaviour
 {
-    [SerializeField]
-    private float _baseSnakeSpeed = 0.11f;
-    [SerializeField]
-    private float _speedMultiplayer = 1f;
+    [SerializeField] private float _baseSnakeSpeed = 0.11f;
+    [SerializeField] private float _speedMultiplayer = 1f;
+    [SerializeField] private Transform _headPartReference;
+    [SerializeField] private Transform _bodyPartPrototype;
 
+    [SerializeField] private List<SnakePart> _snakeParts = new List<SnakePart>();
+
+    private SnakeInput _input;
+    private BoardPresenter _boardPresenter;
+    private SnakePart _head;
+
+    private Direction _currentDirection = Direction.Up;
+    private float timer = 0f;
     private float _snakeSpeed => _baseSnakeSpeed * _speedMultiplayer;
     private float _speedUpTimer;
+
+    public IReadOnlyList<BoardField> SnakeParts => _snakeParts.Select(x => x.CurrentField).ToList();
 
     public void ChangeSpeedModifier(float newModifier, float buffTime)
     {
@@ -27,25 +36,8 @@ public class Snake : MonoBehaviour
         _speedMultiplayer = 1f;
     }
 
-    //private BoardField _currentHeadPart;
-    private BoardPresenter _boardPresenter;
-
-    //[SerializeField] private SnakePart _head;
-    [SerializeField] private Transform _headPartReference;
-    [SerializeField] private Transform _bodyPartPrototype;
-    [SerializeField] private List<SnakePart> _snakeParts = new List<SnakePart>();
-
-    public IReadOnlyList<BoardField> SnakeParts => _snakeParts.Select(x => x.CurrentField).ToList();
-
-    [SerializeField, ReadOnly] private SnakeInput _input;
-
-    private SnakePart _head;
-    private Direction _currentDirection = Direction.Up;
-
-    // while use of BoardField is not optimal it allows to do the task quickly and is flexible to modify if requirements will change
-
     [System.Serializable]
-    public class SnakePart
+    private class SnakePart
     {
         public SnakePart(BoardField f, Transform gfx, BoardPresenter b)
         {
@@ -110,10 +102,9 @@ public class Snake : MonoBehaviour
         }
     }
 
-    public void AddPart()
+    private void AddPart()
     {
         Transform newPart = Instantiate(_bodyPartPrototype, _bodyPartPrototype.transform.parent).transform;
-        //Debug.Log("Move it where it should be");
         newPart.gameObject.SetActive(true);
 
         SnakePart sp = new SnakePart(_head.CurrentField, newPart, _boardPresenter);
@@ -130,7 +121,7 @@ public class Snake : MonoBehaviour
         _head = _snakeParts.First();
     }
 
-    public void RemovePart()
+    private void RemovePart()
     {
         // asume that head cannot be eaten down
         if (_snakeParts.Count > 1)
@@ -149,9 +140,9 @@ public class Snake : MonoBehaviour
         //asume that snake starts with head + 1 segment
         AddHead();
         AddPart();
-    }
 
-    private float timer = 0f;
+        timer = _baseSnakeSpeed;
+    }
 
     public bool Tick()
     {
@@ -198,8 +189,6 @@ public class Snake : MonoBehaviour
             }
         }
     }
-
-
 
     public bool CheckIfCollisionHappened()
     {
