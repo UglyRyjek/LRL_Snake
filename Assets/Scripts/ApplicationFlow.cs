@@ -24,12 +24,14 @@ public class ApplicationFlow : MonoBehaviour
 
     private void InitializeApplication()
     {
+        GameSessionService.I.StartSession();
+
         _board = new BoardService(_boardParameters);
         _boardPresenter.InitializeBoard(_board);
 
         _snake.Initialize(_boardPresenter, _board.BoardModel, _snakeInput);
 
-        InvokeSnakeTick();
+        SnakeMovement();
     }
 
     private void Update()
@@ -44,7 +46,7 @@ public class ApplicationFlow : MonoBehaviour
             return;
         }
 
-        InvokeSnakeTick();
+        SnakeMovement();
 
 
         if (Input.GetKeyDown(KeyCode.Z))
@@ -54,7 +56,7 @@ public class ApplicationFlow : MonoBehaviour
         }
     }
 
-    private void InvokeSnakeTick()
+    private void SnakeMovement()
     {
         bool ticked = _snake.Tick();
 
@@ -75,8 +77,14 @@ public class ApplicationFlow : MonoBehaviour
                 v.EatenEffect(_snake);
                 _edibleSpawner.EatEdible(v);
 
+                OnEdibleEaten();
             }
         }
+    }
+
+    private void OnEdibleEaten()
+    {
+        GameSessionService.I.AddEdible();
     }
 
     // assume there is always one
@@ -112,4 +120,54 @@ public class AppProfile
 {
     public int minimalSnakeSize = 1;
     
+}
+
+public class GameSessionService
+{
+    private static GameSessionService i;
+    public static GameSessionService I
+    {
+        get
+        {
+            if(i == null)
+            {
+                i = new GameSessionService();
+            }
+
+            return i;
+        }
+    }
+
+    public void StartSession()
+    {
+        GetSessionData = new SessionData();
+    }
+
+    public void AddEdible()
+    {
+        GetSessionData.AddEdible();
+    }
+
+    public SessionData GetSessionData { get; private set; }
+}
+
+[System.Serializable]
+public class SessionData
+{
+    public SessionData()
+    {
+        eatenEdibles = 0;
+        startTime = Time.time;
+    }
+
+    public void AddEdible()
+    {
+        eatenEdibles++;
+    }
+
+    private float startTime;
+    private int eatenEdibles;
+
+    public int EatenEdibles => eatenEdibles;
+    public float GameTime => Time.time - startTime;
 }
