@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
-using Sirenix.OdinInspector;
 using System.Linq;
+using UnityEngine;
 
 public class SimpleBoard : MonoBoard
 {

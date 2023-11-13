@@ -28,7 +28,6 @@ public class SnakeController : MonoBehaviour
         _input = baseInput;
         _snakeMovementProfile = moveProfile;
 
-        //asume that snake starts with head + 1 segment
         AddHead();
         AddPart();
 
@@ -92,7 +91,6 @@ public class SnakeController : MonoBehaviour
             Direction d = _input.GetInputDirection();
             if (d != Direction.None)
             {
-                //asume that we ignore pressing oposite direcion
                 bool opositePressed = DirectionUtility.AreOpositeDirection(_currentDirection, d);
                 if (opositePressed == false)
                 {
@@ -154,7 +152,6 @@ public class SnakeController : MonoBehaviour
 
     private void RemovePart()
     {
-        // asume that head cannot be eaten down
         if (_snakeParts.Count > 1)
         {
             SnakePart lastPart = _snakeParts.Last();
