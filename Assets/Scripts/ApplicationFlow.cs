@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
+using System.Linq;
 
 public class ApplicationFlow : MonoBehaviour
 {
@@ -12,12 +13,9 @@ public class ApplicationFlow : MonoBehaviour
     [SerializeField] private SnakeInput _snakeInput;
     [SerializeField] private GameOverUI _gameOverUI;
 
-    [SerializeField]
-    private float _tickTime;
+    [SerializeField] private EdibleSpawner _edibleSpawner;
 
-    private float timer;
     private bool _gameOverFlag;
-
 
     private void Start()
     {
@@ -31,48 +29,88 @@ public class ApplicationFlow : MonoBehaviour
 
         _snake.Initialize(_boardPresenter, _board.BoardModel, _snakeInput);
 
-        InvokeTick();
+        InvokeSnakeTick();
     }
-
-    
 
     private void Update()
     {
-        WaitForTimerToTick();
-    }
-
-    private void WaitForTimerToTick()
-    {
-        if(_gameOverFlag == true)
-        {
-            return;
-        }
-
-        timer += Time.deltaTime;
-
-        if(timer >= _tickTime)
-        {
-            InvokeTick();
-            timer = 0f;
-        }
-    }
-
-    private void InvokeTick()
-    {
-        if (Input.GetKey(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             _snake.AddPart();
         }
 
-        _snake.Tick();
-
-        bool gameOver = _snake.CheckIfCollisionHappened();
-
-        if(gameOver)
+        if (_gameOverFlag == true)
         {
-            Debug.Log("Game Over");
-            _gameOverFlag = true;
-            _gameOverUI.LoadGameOver();
+            return;
+        }
+
+        InvokeSnakeTick();
+
+
+
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            BoardField bf = GetFreeFieldOnBoard(_snake.SnakeParts);
+            _edibleSpawner.SpawnEdible(bf, _boardPresenter);
         }
     }
+
+    private void InvokeSnakeTick()
+    {
+        bool ticked = _snake.Tick();
+
+        if(ticked == true)
+        {
+            bool gameOver = _snake.CheckIfCollisionHappened();
+            if (gameOver)
+            {
+                Debug.Log("Game Over");
+                _gameOverFlag = true;
+                _gameOverUI.LoadGameOver();
+            }
+
+            var v = _edibleSpawner.BEPU(_snake.SnakeParts.First());
+            if (v != null)
+            {
+                Debug.Log("EAT EDIBLE");
+                v.EatenEffect(_snake);
+                _edibleSpawner.EatEdible(v);
+
+            }
+        }
+    }
+
+    // assume there is always one
+    private BoardField GetFreeFieldOnBoard(IReadOnlyList<BoardField> snake)
+    {
+        List<BoardField> freeFields = new List<BoardField>();
+
+        // all fields on board
+        _board.BoardModel.Fields.ForEach(x => freeFields.Add(x));
+
+        // minus ones occupied by snake
+        for (int i = 0; i < snake.Count; i++)
+        {
+            freeFields.Remove(snake[i]);
+        }
+
+        //TODO
+        // minus already occupied by edibles
+
+        //TODO
+        // also exclude these that are too close too head
+        BoardField snakeHead = snake.First();
+
+
+        BoardField randomField = freeFields[Random.Range(0, freeFields.Count - 1)];
+        return randomField;
+    }
+}
+
+
+[System.Serializable]
+public class AppProfile
+{
+    public int minimalSnakeSize = 1;
+    
 }

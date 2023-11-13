@@ -6,6 +6,10 @@ using System.Linq;
 
 public class Snake : MonoBehaviour
 {
+    [SerializeField]
+    private float _snakeSpeed = 0.11f;
+
+
     //private BoardField _currentHeadPart;
     private BoardPresenter _boardPresenter;
 
@@ -13,6 +17,8 @@ public class Snake : MonoBehaviour
     [SerializeField] private Transform _headPartReference;
     [SerializeField] private Transform _bodyPartPrototype;
     [SerializeField] private List<SnakePart> _snakeParts = new List<SnakePart>();
+
+    public IReadOnlyList<BoardField>SnakeParts => _snakeParts.Select(x => x.CurrentField).ToList();
 
     [SerializeField, ReadOnly] private SnakeInput _input;
 
@@ -22,7 +28,7 @@ public class Snake : MonoBehaviour
     // while use of BoardField is not optimal it allows to do the task quickly and is flexible to modify if requirements will change
 
     [System.Serializable]
-    private class SnakePart
+    public class SnakePart
     {
         public SnakePart(BoardField f, Transform gfx, BoardPresenter b)
         {
@@ -110,11 +116,22 @@ public class Snake : MonoBehaviour
         AddPart();
     }
 
-    public void Tick()
-    {
-        CheckIfSnakeShouldChangeDirection();
+    private float timer = 0f;
 
-        MoveSnake(_currentDirection);
+    public bool Tick()
+    {
+        timer += Time.deltaTime;
+        if (timer >= _snakeSpeed)
+        {
+            CheckIfSnakeShouldChangeDirection();
+            MoveSnake(_currentDirection);
+            timer = 0f;
+
+            return true;
+        }
+
+        return false;
+
 
         void CheckIfSnakeShouldChangeDirection()
         {
@@ -146,6 +163,8 @@ public class Snake : MonoBehaviour
             }
         }
     }
+
+
 
     public bool CheckIfCollisionHappened()
     {
