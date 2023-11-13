@@ -5,16 +5,13 @@ using System;
 
 public class EdibleSpawner : MonoBehaviour
 {
-    private BoardPresenter _boardPresenter;
-    private BoardService _board;
+    private SpawningProfile _spawningProfile;
+    private IBoard _board;
     private float _timer;
 
-    [SerializeField, Range(0.2f, 10f)]
-    private float _edibleSpawningRange = 0.5f;
-
-    public void Initialized(BoardService board, BoardPresenter boardPresenter)
+    public void Initialized(IBoard board, SpawningProfile spawningProfile)
     {
-        _boardPresenter = boardPresenter;
+        _spawningProfile = spawningProfile;
         _board = board;
     }
 
@@ -25,13 +22,13 @@ public class EdibleSpawner : MonoBehaviour
     private class SpawnerWreper
     {
         [SerializeField]
-        private BaseEdiblePowerUp _prototype;
+        private BaseEdible _prototype;
 
         [SerializeField]
         private float _weight = 1;
 
         public float Weight => _weight;
-        public BaseEdiblePowerUp Prototype => _prototype;
+        public BaseEdible Prototype => _prototype;
     }
 
     private static SpawnerWreper WagedRandomSpawner(IReadOnlyList<SpawnerWreper> availableEdibles)
@@ -55,17 +52,17 @@ public class EdibleSpawner : MonoBehaviour
 
     private class ActiveEdible
     {
-        public ActiveEdible(BaseEdiblePowerUp m, BoardField b)
+        public ActiveEdible(BaseEdible m, BoardField b)
         {
             mono = m;
             boardField = b;
         }
 
-        public BaseEdiblePowerUp mono;
+        public BaseEdible mono;
         public BoardField boardField;
     }
 
-    public BaseEdiblePowerUp BEPU(BoardField snakeHead)
+    public BaseEdible BEPU(BoardField snakeHead)
     {
         ActiveEdible b = _ediblesDictionary.FirstOrDefault(x => x.boardField == snakeHead);
         if (b != null)
@@ -76,11 +73,11 @@ public class EdibleSpawner : MonoBehaviour
         return null;
     }
 
-    private void SpawnEdible(BoardField bf, BoardPresenter bp)
+    private void SpawnEdible(BoardField bf, IBoard bp)
     {
         SpawnerWreper sw = WagedRandomSpawner(_availableEdibles);
 
-        BaseEdiblePowerUp newEdible = Instantiate(sw.Prototype, sw.Prototype.transform.parent);
+        BaseEdible newEdible = Instantiate(sw.Prototype, sw.Prototype.transform.parent);
 
         newEdible.gameObject.SetActive(true);
 
@@ -90,7 +87,7 @@ public class EdibleSpawner : MonoBehaviour
         _ediblesDictionary.Add(a);
     }
 
-    public void EatEdible(BaseEdiblePowerUp powerUp)
+    public void EatEdible(BaseEdible powerUp)
     {
         ActiveEdible a = _ediblesDictionary.FirstOrDefault(x => x.mono == powerUp);
         if (a != null)
@@ -100,9 +97,9 @@ public class EdibleSpawner : MonoBehaviour
         }
     }
 
-    public void SolveEdibleEating(Snake snake, Action<BaseEdiblePowerUp> OnEaten)
+    public void SolveEdibleEating(SnakeController snake, Action<BaseEdible> OnEaten)
     {
-        BaseEdiblePowerUp v = BEPU(snake.SnakeParts.First());
+        BaseEdible v = BEPU(snake.SnakeParts.First());
         if (v != null)
         {
             v.EatenEffect(snake);
@@ -112,20 +109,21 @@ public class EdibleSpawner : MonoBehaviour
         }
     }
 
-    public void SolveEdibleSpawning(Snake snake)
+    public void SolveEdibleSpawning(SnakeController snake)
     {
         _timer += Time.deltaTime;
-        if(_timer > _edibleSpawningRange)
+        if(_timer > _spawningProfile.spawningRate)
         {
             SpawnSingleRandom(snake);
             _timer = 0f;
         }
     }
 
-    public void SpawnSingleRandom(Snake snake)
+    public void SpawnSingleRandom(SnakeController snake)
     {
         BoardField bf = _board.GetFreeFieldOnBoard(snake.SnakeParts, _ediblesDictionary.Select(x => x.boardField).ToList());
 
-        SpawnEdible(bf, _boardPresenter);
+        SpawnEdible(bf, _board);
     }
 }
+

@@ -3,22 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using Sirenix.OdinInspector;
 using System.Linq;
+using SSnake.GameSession;
 
 public class ApplicationFlow : MonoBehaviour
 {
-
     [FoldoutGroup("Dependencie")]
-    [SerializeField] private BoardService _board;
+    [SerializeField] private MonoBoard _board;
     [FoldoutGroup("Dependencie")]
-    [SerializeField] private BoardPresenter _boardPresenter;
-    [FoldoutGroup("Dependencie")]
-    [SerializeField] private BoardParameters _boardParameters;
-    [FoldoutGroup("Dependencie")]
-    [SerializeField] private Snake _snake;
+    [SerializeField] private SnakeController _snake;
     [FoldoutGroup("Dependencie")]
     [SerializeField] private SnakeInput _snakeInput;
     [FoldoutGroup("Dependencie")]
     [SerializeField] private EdibleSpawner _edibleSpawner;
+    [FoldoutGroup("Dependencie")]
+    [SerializeField] private ParametersProfile _parametersProfile;
 
     private void Start()
     {
@@ -29,10 +27,9 @@ public class ApplicationFlow : MonoBehaviour
     {
         OnFlowStart();
 
-        _board = new BoardService(_boardParameters);
-        _boardPresenter.InitializeBoard(_board);
-        _edibleSpawner.Initialized(_board, _boardPresenter);
-        _snake.Initialize(_boardPresenter, _board.BoardModel, _snakeInput);
+        _board.GenerateBoard(_parametersProfile.boardProfile.boardSize);
+        _edibleSpawner.Initialized(_board, _parametersProfile.spawningProfile);
+        _snake.Initialize(_board, _snakeInput, _parametersProfile.snakeProfile);
     }
 
     private void Update()
@@ -42,7 +39,7 @@ public class ApplicationFlow : MonoBehaviour
 
     private void ApplicationFlowSequence()
     {
-        if (GameSessionService.I.SessionData.State == SessionData.SessionState.GameOver)
+        if (GameSessionService.I.SessionData.State == SessionState.GameOver)
         {
             return;
         }
@@ -50,7 +47,7 @@ public class ApplicationFlow : MonoBehaviour
         bool ticked = _snake.Tick();
         if(ticked == true)
         {
-            bool gameOver = _snake.CheckIfCollisionHappened();
+            bool gameOver = _snake.IsSnakeCollidedWithSomething();
             if (gameOver)
             {
                 OnGameOver();
@@ -66,7 +63,7 @@ public class ApplicationFlow : MonoBehaviour
         GameSessionService.I.StartSession();
     }
 
-    private void OnEdibleEaten(BaseEdiblePowerUp powerUp)
+    private void OnEdibleEaten(BaseEdible powerUp)
     {
         GameSessionService.I.AddEdible();
     }
@@ -74,77 +71,5 @@ public class ApplicationFlow : MonoBehaviour
     private void OnGameOver()
     {
         GameSessionService.I.EndSession();
-    }
-}
-
-public class GameSessionService
-{
-    private static GameSessionService i;
-
-    public static GameSessionService I
-    {
-        get
-        {
-            if (i == null)
-            {
-                i = new GameSessionService();
-            }
-
-            return i;
-        }
-    }
-
-    public SessionData SessionData { get; private set; }
-
-    public void StartSession()
-    {
-        SessionData = new SessionData();
-        SessionData.SetSessionState(SessionData.SessionState.Playing);
-    }
-
-    public void EndSession()
-    {
-        SessionData.SetSessionState(SessionData.SessionState.GameOver);
-    }
-
-    public void AddEdible()
-    {
-        SessionData.AddEdible();
-    }
-}
-
-[System.Serializable]
-public class SessionData
-{
-    public SessionData()
-    {
-        eatenEdibles = 0;
-        startTime = Time.time;
-        sessionState = SessionState.Playing;
-    }
-
-    public void AddEdible()
-    {
-        eatenEdibles++;
-    }
-
-    public void SetSessionState(SessionState state)
-    {
-        sessionState = state;
-    }
-
-    private SessionState sessionState;
-    private float startTime;
-    private int eatenEdibles;
-
-    public int EatenEdibles => eatenEdibles;
-    public float GameTime => Time.time - startTime;
-    public SessionState State => sessionState;
-
-    [System.Serializable]
-    public enum SessionState
-    {
-        Playing = 0,
-        GameOver = 1,
     }
 }

@@ -1,15 +1,18 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using SSnake.GameSession;
 
 public class GameOverUI : MonoBehaviour
 {
     [SerializeField] private Transform _whole;
     [SerializeField] private Button _restartButton;
+    
+    
 
     private void Update()
     {
-        if(GameSessionService.I.SessionData.State == SessionData.SessionState.GameOver)
+        if(GameSessionService.I.SessionData.State == SessionState.GameOver)
         {
             if (_whole.gameObject.activeInHierarchy == false)
             {

@@ -1,6 +1,6 @@
-public class ReverseEdible : BaseEdiblePowerUp
+public class ReverseEdible : BaseEdible
 {
-    public override void EatenEffect(Snake snake)
+    public override void EatenEffect(SnakeController snake)
     {
         snake.Reverse();
     }

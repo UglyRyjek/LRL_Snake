@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using SSnake.GameSession;
 
 public class SimpleScoringUI : MonoBehaviour
 {

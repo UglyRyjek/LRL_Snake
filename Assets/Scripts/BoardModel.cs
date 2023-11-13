@@ -1,19 +1,14 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
-using Sirenix.OdinInspector;
 
 [System.Serializable]
 public class BoardModel
 {
-    [SerializeField, ReadOnly] 
+    private BoardParameters _parameters;
+
     private List<BoardField> _fields = new List<BoardField>();
     public List<BoardField> Fields => _fields;
 
-    [SerializeField] private BoardParameters _parameters;
-    public BoardParameters BoardParameters => _parameters;
-
-
-    public void GenerateBoard(BoardParameters parameters)
+    public void GenerateBoardData(BoardParameters parameters)
     {
         _parameters = parameters;
 
